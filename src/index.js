@@ -52,23 +52,6 @@ const locations = [
 ];
 
 /**
- * Hreinsar fyrri niðurstöður, passar að niðurstöður séu birtar og birtir element.
- * @param {Element} element
- */
-function renderIntoResultsContent(element) {
-  // TODO útfæra
-}
-
-/**
- * Birtir niðurstöður í viðmóti.
- * @param {SearchLocation} location
- * @param {Array<import('./lib/weather.js').Forecast>} results
- */
-function renderResults(location, results) {
-  // TODO útfæra
-}
-
-/**
  * Birta villu í viðmóti.
  * @param {Error} error
  */
