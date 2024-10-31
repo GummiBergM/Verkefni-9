@@ -19,6 +19,12 @@ import { weatherSearch } from "./lib/weather.js";
  */
 const locations = [
   {
+    title: "Mín staðsetning (þarf leyfi)",
+    className: "my-location",
+    lat: 1000,
+    lng: 1000,
+  },
+  {
     title: "Reykjavík",
     lat: 64.1355,
     lng: -21.8954,
@@ -68,6 +74,40 @@ function renderResults(location, results) {
  */
 function renderError(error) {
   // TODO útfæra
+  console.log(error);
+
+
+  const mainWeather = document.querySelector("main.weather");
+  const errorText = document.createElement("p");
+  errorText.textContent = "Villa kom upp: " + error;
+  mainWeather.appendChild(errorText);
+}
+
+/**
+ * Framkvæmir leit að veðri fyrir núverandi staðsetningu.
+ * Biður notanda um leyfi gegnum vafra.
+ */
+async function onSearchMyLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Success callback
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        console.log(`Latitude: ${userLat}, Longitude: ${userLng}`);
+
+        locations[0].lat = userLat;
+        locations[0].lng = userLng;
+      },
+      (error) => {
+        renderError(error.message);
+      }
+    );
+  } else {
+    console.log("Staðsetning er ekki studd á þessum vafra.");
+  }
+
+  console.log(locations[0]);    
 }
 
 /**
@@ -76,6 +116,33 @@ function renderError(error) {
 function renderLoading() {
   console.log("render loading");
   // TODO útfæra
+  const mainWeather = document.querySelector("main.weather");
+
+  // Eyða gömlum niðurstöðum ef til
+  const previousResults = mainWeather.querySelector(".results");
+  if (previousResults) {
+    mainWeather.removeChild(previousResults);
+  }
+
+  // Tjékkar ef "nidurstodurText" er til
+  let nidurstodurText = mainWeather.querySelector("h2.nidurstodurText");
+  if (!nidurstodurText) {
+    // Ef ekki til, þá búa til "nidurstodurText"
+    nidurstodurText = document.createElement("h2");
+    nidurstodurText.textContent = "Niðurstöður";
+    nidurstodurText.classList.add("nidurstodurText");
+    mainWeather.appendChild(nidurstodurText);
+  }
+
+  // Tjékkar ef "leita" er til
+  let leita = mainWeather.querySelector("p.leitaText");
+  if (!leita) {
+    // Ef ekki til, þá búa til "leita"
+    leita = document.createElement("p");
+    leita.textContent = "Leita...";
+    leita.classList.add("leitaText");
+    mainWeather.appendChild(leita);
+  }
 }
 
 /**
@@ -97,20 +164,15 @@ async function onSearch(location) {
   // Finna <main> með klasanum "weather"
   const mainWeather = document.querySelector("main.weather");
 
-  // Fjarlægja fyrri niðurstöður ef þær eru til staðar
-  const previousResults = mainWeather.querySelector(".results");
-  if (previousResults) {
-    mainWeather.removeChild(previousResults);
+  // Fjarlægja "leita" eftir að niðurstöðurnar eru hlaðnar
+  const leita = mainWeather.querySelector("p.leitaText");
+  if (leita) {
+    mainWeather.removeChild(leita);
   }
 
   // Búa til nýtt div fyrir niðurstöður
   const tableContainer = document.createElement("div");
   tableContainer.classList.add("results");
-
-  // Búa til niðustöður texta
-  const nidurstodurText = document.createElement("h2");
-  nidurstodurText.textContent = "Niðurstöður";
-  tableContainer.appendChild(nidurstodurText);
 
   // Búa til ytri div fyrir titla
   const titleContainer = document.createElement("div");
@@ -122,7 +184,11 @@ async function onSearch(location) {
 
   // Búa til undirtitill
   const titleSubtext = document.createElement("p");
-  titleSubtext.textContent = "Spá fyrir daginn á breiddargráðu " + location.lat + " og lengdargráðu " + location.lng;
+  titleSubtext.textContent =
+    "Spá fyrir daginn á breiddargráðu " +
+    location.lat +
+    " og lengdargráðu " +
+    location.lng;
   titleContainer.appendChild(titleSubtext);
 
   // Bæta titla div við tableContainer
@@ -179,13 +245,7 @@ async function onSearch(location) {
   mainWeather.appendChild(tableContainer);
 }
 
-/**
- * Framkvæmir leit að veðri fyrir núverandi staðsetningu.
- * Biður notanda um leyfi gegnum vafra.
- */
-async function onSearchMyLocation() {
-  // TODO útfæra
-}
+
 
 /**
  * Býr til takka fyrir staðsetningu.
@@ -260,6 +320,10 @@ function render(container, locations, onSearch, onSearchMyLocation) {
       onSearch(location);
     });
     locationsListElement.appendChild(liButtonElement);
+
+    if (location.className === "my-location") {
+      liButtonElement.addEventListener("click", onSearchMyLocation);
+    }
   }
 
   parentElement.appendChild(locationsElement);
